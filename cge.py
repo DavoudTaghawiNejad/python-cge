@@ -1,64 +1,105 @@
+from cge_tools import *
 import numpy as np
 import pandas as pd
-u = ['BRD', 'MLK', 'CAP', 'LAB', 'HH', 'GOV']
+
+
+index = ['BRD', 'MLK', 'CAP', 'LAB', 'HH', 'GOV']
 
 ii = ['BRD', 'MLK']
-
-# i is j
+# i and j is ii
 
 ih = ['CAP', 'LAB']
+# h and k is ih
 
-# h is k
-
-table = [
-		['.....'],
-		['.....'],
-		['.....'],
-		['.....'],
-		['.....'],
-		['.....'],
-		['.....']
-	]
-
-table = np.random.randint(0,9, size=(7,7))
+table = 
+[
+	['BRD', 'MLK'],
+	['.....'],
+	['.....'],
+	['.....'],
+	['.....'],
+	['.....'],
+	['.....']
+]
 
 
-sam = pd.DataFrame(table,index=u,columns=u)
+sam = Sam(index)
+print sam
+#sam['HH']['BRD'] = 15
+#sam['HH']['MLK'] = 35
+#sam['BRD']['CAP'] = 5
+#sam['MLK']['CAP'] = 20
+#sam['BRD']['LAB'] = 10
+#sam['MLK']['LAB'] = 15
+#sam['CAP']['HH'] = 25
+#sam['LAB']['HH'] = 25
 
 
-def X0(i):
-	""" household consumption of the i-th good """
-	assert ii.count(i), i
-	return sam["HH"][i]
 
-def G0(g):
-	""" government consumption of i-th good or k-th factor """
-	assert ii.count(g) or ih.count(g), g
-	return sam[i]["gov"]	
+for u in index:
+	assert sum(sam[u]) == sum(sam.ix[u])
 
-def F0(h, j):
-	""" ... """
-	assert ih.count(h) and ii.count(j)
-	return sam[h][j]
+doc = {
+	'X0': " household consumption of the i-th good ",
+	'G0': " government consumption of i-th good or k-th factor ",
+	'F0': " the h-th factor input by the j-th firm ",
+	'Z0': " output of the j-th good"	
+	# ...
+}
 
-def Z0(j):
-	""" ... """
-	assert ii.count(j), j
-	return sum(sam.ix[j])
+X0 = sam.field_by_rows("HH", ii)
 
-def FF(h):
-	""" ... """
-	assert ih.count(h), h
-	return sum(sam[h])
+#G0 = sam.field_by_rows("gov", ii + ih)
+
+F0 = sam.sub_matrix(rows=ih, columns=ii)
+
+Z0 = sam.sum_by_rows(ii)
+
+FF = sam.sum_by_rows(ih)
 
 print sam
-print X0.__doc__
-print [X0(i) for i in ii]
-# ...
+print doc['X0']
+print X0.dtype.names
+print X0
+print 'F0'
+print F0
+print 'Z0'
+print Z0.dtype.names
+print Z0
+print 'FF'
+print FF.dtype.names
+print FF
+
 
 def alpha(i):
 	""" share parameter in utility function """
 	return X0(i) / sum([X0(j) for j in ii])
 
-def beta(h, j):
-	
+
+print 'alpha'
+alpha = np.empty_like(X0)
+sX0 = rsum(X0)
+for i in ii:
+	alpha[i] = X0[i] / sX0
+print alpha.dtype.names
+print alpha
+
+print 'beta'
+beta = F0.copy()
+sF0 = F0.sum()
+
+for h in ih:
+	for j in ii:
+		beta[j][h] = F0[j][h] / sF0[j]
+print beta
+
+print 'b'
+b = Z0.copy()
+for j in ii:
+	b[j] = Z0[j] / cobbdouglas(F0, beta,  industry=j, factors=ih)
+
+printseries(b)
+
+
+
+UU = lambda x: np.prod(x ** alpha.view())
