@@ -32,6 +32,9 @@ class Series:
 	def __rpow__(self, x):
 		return x ** self.data
 
+	def __len__(self):
+		return len(self.data)
+
 
 def names(data):
 	return data.dtype.names

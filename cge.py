@@ -6,7 +6,8 @@ from cge_tools import *
 import numpy as np
 from scipy.optimize import minimize
 import pandas as pd
-
+from openopt import NLP
+from pprint import pprint
 
 
 np.set_printoptions(precision=3)
@@ -14,9 +15,12 @@ np.set_printoptions(precision=3)
 def eqX(industry, Industry):  ###
 	i, I = industry, Industry
 	def equation(x):
-		X, Z, px, pf = x[sX:sF], x[sZ:spx], x[spx:spz], x[spf:epf]
+		X, px, pf = x[sX:sF], x[spx:spz], x[spf:epf]
 		pf = np.array([float(x[spf:epf]), 1])
-		return X[i] - alpha[i] * sum([pf[h] * FF[h] for h, _ in enumerate(ih)] / px[i])
+		alpha[I]
+		[pf[h] * FF[H] for h, H in enumerate(ih)]
+		px[i]
+		return X[i] - alpha[I] * sum([pf[h] * FF[H] for h, H in enumerate(ih)] / px[i])
 	return equation
 
 def eqpx(i, I):
@@ -34,13 +38,13 @@ def eqZ(i, I): ###
 def eqpz(j, J):  ###
 	def equation(x):
 		F, Z = Sam.unflatten(index=ih, columns=ii, table=x[sF:sZ]), x[sZ:spx]
-		return Z[j] - b[j] * np.prod([F[J][H] ** beta[J][H] for H in ih])
+		return Z[j] - b[J] * np.prod([F[J][H] ** beta[J][H] for H in ih])
 	return equation
 
 def eqpf(h, H):
 	def equation(x):
 		F = Sam.unflatten(index=ih, columns=ii, table=x[sF:sZ])
-		return sum(F[j][H] for j in ii) - FF[h]
+		return sum(F[J][H] for J in ii) - FF[H]
 	return equation
 
 def eqF(h, H, j, J):  ###
@@ -155,8 +159,9 @@ epf = spf + h - 1
 
 
 bnds = [(np.float64(0.001), 999999999)] * epf
+lb = np.array([(np.float64(0.001))] * epf)
+ub = np.array([(None)] * epf)
 x = np.empty(epf, dtype='f64')
-xnames = [] * epf
 x[sX:sF] = X0.data
 x[sF:sZ] = F0.as_matrix().flatten()
 x[sZ:spx] = Z0.data
@@ -164,8 +169,11 @@ x[spx:spz] = [1] * i
 x[spz:spf] = [1] * j
 x[spf:epf] = [1] * (epf - spf)
 
+t = x
+x = np.array([21.1] * epf)
 print x
 
+xnames = [] * epf
 xnames[sX:sF] = X0.names
 xnames[sF:sZ] = [i+h+' ' for i in ii for h in ih]
 xnames[sZ:spx] = Z0.names
@@ -173,7 +181,16 @@ xnames[spx:spz] = ii
 xnames[spz:spf] = ii
 xnames[spf:epf] = ih
 
-print zip(xnames, x)
+xtypes = [] * epf
+xtypes[sX:sF] = ['X0'] * len(X0)
+xtypes[sF:sZ] = ['F'] * (len(ii) + len(ih))
+xtypes[sZ:spx] = ['F0'] * len(F0)
+xtypes[spx:spz] = ['pb'] * len(ii)
+xtypes[spz:spf] = ['pz'] * len(ii)
+xtypes[spf:epf] = ['pf'] * len(ih)
+
+xnametypes = zip(xtypes,xnames)
+pprint(zip(xnametypes, x))
 
 constraints = []
 
@@ -184,39 +201,47 @@ qpz = []
 qpf = []
 qF = []
 
-for industry, Industry in enumerate(ii):	
-	qX.append(eqX(industry, Industry))
-	constraints.append({'type': 'eq', 'n':'eqX', 'fun': lambda x: qX[-1](x)})  # 1
-	qpx.append(eqpx(industry, Industry))
-	constraints.append({'type': 'eq', 'n':'eqpx', 'fun': lambda x: qpx[-1](x)})
-	qZ.append(eqZ(industry, Industry))
-	constraints.append({'type': 'eq', 'n':'eqZ', 'fun': lambda x: qZ[-1](x)})  # 2
-	qpz.append(eqpz(industry, Industry))
-	constraints.append({'type': 'eq', 'n':'eqpz', 'fun': lambda x: qpz[-1](x)})  # 2
+def unlink(value):
+	return value;
+
+for i, I in enumerate(ii):	
+	industry = unlink(i)
+	Industry = unlink(I)
 	
+	constraints.append(eqX(industry, Industry)) # 1
+	constraints.append(eqpx(industry, Industry))
+	constraints.append(eqZ(industry, Industry))
+	constraints.append(eqpz(industry, Industry))
 	
+del i
 	
 
-for factor, Factor in enumerate(ih):
- 	qpf.append(eqpf(factor, Factor))
-	constraints.append({'type': 'eq', 'n':'eqpf', 'fun': lambda x: qpf[-1](x)})
+for f, F in enumerate(ih):
+	factor = unlink(f)
+	Factor = unlink(F)
+	constraints.append(eqpf(factor, Factor))
 
-for factor, Factor in enumerate(ih):
-	for industry, Industry in enumerate(ii):
-		qF.append(eqF(factor, Factor, industry, Industry))
-		constraints.append({'type': 'eq', 'n':'eqF', 'fun': lambda x: qF[-1](x)})  # 234
+for f, F in enumerate(ih):
+	for i, I in enumerate(ii):
+		factor = unlink(f)
+		Factor = unlink(F)			
+		industry = unlink(i)
+		Industry = unlink(I)
+		constraints.append(eqF(factor, Factor, industry, Industry))
+
 
 UU = lambda x: - np.prod([x[i] ** alpha[i] for i in range(len(ii))])
 
-print UU(x)
-
-del industry
-del Industry
-del i 
-del j
 
 
-res = minimize(UU, x, method='SLSQP', bounds=bnds, constraints=constraints)
-print res
+p = NLP(UU, x, h=constraints, ub=ub, lb=lb, iprint = 50, maxIter = 10000, maxFunEvals = 1e7, name = 'NLP_1')
+#res = minimize(UU, x, method='SLSQP', bounds=bnds, constraints=constraints)
+p.plot = True
 
+solver = 'ralg'
+r = p.solve(solver, plot=0) # string argument is solver name
+print r.ff, '(', UU(t), UU(x), ')'
+pprint(zip(xnametypes,zip(t,r.xf)))
 
+for i, constraint in enumerate(constraints):
+	print(i, '%02f' % constraint(r.xf))
