@@ -15,4 +15,4 @@ class Parameter:
 
     def __str__(self):
         return 'sam\n%s\nindustries\n%s\nfactors\n%s\nconsumers\n%s' % (
-            self.sam, self.industries, self.factors, self.consumers)
+            str(self.sam), self.industries, self.factors, self.consumers)
