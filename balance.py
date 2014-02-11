@@ -2,26 +2,41 @@ import numpy as np
 from openopt import NLP
 
 
+np.set_printoptions(suppress=True)
+
 def balance(table, debug=False):
-    table = np.matrix(table)
+    table = np.array(table)
     assert table.shape[0] == table.shape[1]
     size = table.shape[0]
+    x0 = np.array([v for v in table.flatten() if v !=0])
 
+    def transform(ox):
+        ret = np.zeros_like(table)
+        i = 0
+        for r in range(size):
+            for c in range(size):
+                if table[r, c] != 0:
+                    ret[r, c] = ox[i]
+                    i += 1
+        return ret
+    
     def objective(ox):
-        ox = ox.reshape(size, size)
-        ox = np.square((ox - table) / ox)
-        return np.sum(ox)
+        ox = transform(ox)
+        ox = np.square((ox - table) / table)
+        return np.nansum(ox)
 
     def constraints(ox):
-        ox = ox.reshape(size, size)
+        ox = transform(ox)
         ret = np.sum(ox, 0) - np.sum(ox, 1)
         return ret
 
     if debug:
         print("--- balance ---")
-    p = NLP(objective, table, h=constraints, iprint = 50 * int(debug), maxIter = 10000, maxFunEvals = 1e7, name = 'NLP_1') 
+    p = NLP(objective, x0, h=constraints, iprint = 50 * int(debug), maxIter = 100000, maxFunEvals = 1e7, name = 'NLP_1') 
     r = p.solve('ralg', plot=0)
     if debug:        
-        print dir(r)
+        print 'constraints'
         print constraints(r.xf)
-    return r.xf.reshape(size, size)
+    assert r.isFeasible
+
+    return transform(r.xf)
