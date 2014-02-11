@@ -6,8 +6,11 @@ from parameter import Parameter
 from calibration import Calibration
 from simulation import Simulation
 from title import title, heading
+from balance import balance
+from pprint import pprint
 
-debug = False
+
+debug = True
 
 table = [
             ['BRD', 'MLK'],
@@ -20,11 +23,9 @@ table = [
         ]
 
 title('CGE')
-    
-
 
 parameter = Parameter(
-	index=['BRD', 'MLK', 'CAP', 'LAB', 'HH', 'GOV'],
+	index=['BRD', 'MLK', 'CAP', 'LAB', 'HH', 'GOV'],   
 	industries=['BRD', 'MLK'],
 	factors=['CAP', 'LAB'],
 	consumers=['HH'],  #'GOV'
@@ -39,6 +40,12 @@ parameter.sam['CAP']['HH'] = 25
 parameter.sam['LAB']['HH'] = 25
 
 
+heading('unbalanced')
+print(parameter.sam)
+parameter.sam.balance()
+heading('balance')
+print(parameter.sam)
+
 heading('parameter')
 print parameter
 
@@ -51,7 +58,7 @@ doc = {
     # ...
 }
 heading('doc')
-print doc
+pprint(doc)
 
 calibration = Calibration(parameter)
 heading('calibration')

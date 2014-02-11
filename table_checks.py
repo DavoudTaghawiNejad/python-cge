@@ -27,7 +27,7 @@ def check_square(table):
         assert table.shape[0] == table.shape[1]  == length
 
 def check_balance(table):
-    assert (
+    return (
                     (np.sum(table, 1) - 1e-06 < np.sum(table, 0)).all()
                 and (np.sum(table, 1) + 1e-06 > np.sum(table, 0)).all()
     ), np.sum(table, 0) - np.sum(table, 1)

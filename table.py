@@ -6,6 +6,8 @@ from cge_tools import Series, empty_recarray
 class Table(object):
     def __init__(self, index, columns, sam):
         self.sam = pd.DataFrame(sam, index=index, columns=columns)
+        self.index=self.sam.index
+        self.columns=self.sam.columns
 
     @classmethod
     def empty(cls, index, columns):
@@ -66,3 +68,9 @@ class Table(object):
 
     def matrix(self):
         return np.matrix(self.sam)
+
+    def replace(self, m):
+        return Table(sam=self.sam, index=self.sam.index, columns=self.sam.columns)
+
+    def array(self):
+        return self.sam.values

@@ -1,11 +1,14 @@
 import numpy as np
 from openopt import NLP
 
-
 np.set_printoptions(suppress=True)
 
-def balance(table, debug=False):
-    table = np.array(table)
+def balance(sam, debug=False):
+    try:
+        table = sam.array()
+    except AttributeError:
+        table = np.array(sam)
+
     assert table.shape[0] == table.shape[1]
     size = table.shape[0]
     x0 = np.array([v for v in table.flatten() if v !=0])
@@ -40,4 +43,7 @@ def balance(table, debug=False):
         print constraints(r.xf)
     assert r.isFeasible
 
-    return transform(r.xf)
+    try:
+        return sam.replace(transform(r.xf))
+    except UnboundLocalError:
+        return transform(r.xf)
