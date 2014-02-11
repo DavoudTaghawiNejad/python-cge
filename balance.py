@@ -21,14 +21,15 @@ def balance(table, debug=False):
         return ret
     
     def objective(ox):
-        ox = transform(ox)
-        ox = np.square((ox - table) / table)
-        return np.nansum(ox)
+        ox = np.square((ox - x0) / x0)
+        return np.sum(ox)
 
     def constraints(ox):
         ox = transform(ox)
         ret = np.sum(ox, 0) - np.sum(ox, 1)
         return ret
+
+    print constraints(x0)
 
     if debug:
         print("--- balance ---")
