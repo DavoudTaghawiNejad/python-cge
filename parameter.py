@@ -2,12 +2,12 @@ from sam import Sam
 
 
 class Parameter:
-    def __init__(self, index, industries, factors, consumers, table=None):
+    def __init__(self, index, industries, factors, consumers, sam=None):
         self.index = index
         self.industries = industries
         self.factors = factors
         self.consumers = consumers
-        self.sam = Sam(table=table, index=index, columns=index)
+        self.sam = Sam(sam=sam, index=index, columns=index)
 
 
     def __str__(self):

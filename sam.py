@@ -1,17 +1,22 @@
 import numpy as np
 import pandas as pd
 from cge_tools import Series, empty_recarray
+from table_checks import check_table, check_balance
+
 
 class Sam:
-    def __init__(self, index, columns, table=None):
-        if table ==  None:
-            table = np.zeros(shape=(len(index), len(index)))
-        self.sam = pd.DataFrame(table, index=index, columns=columns)
+    def __init__(self, index, columns, sam=None):
+        if sam ==  None:
+            sam = np.zeros(shape=(len(index), len(index)))
+        check_table(sam, len(index))
+        check_balance(sam)
+        self.sam = pd.DataFrame(sam, index=index, columns=columns)
+
 
     @classmethod
-    def unflatten(cls, index, columns, table):
-        return cls(table=np.reshape(
-                                    table, 
+    def unflatten(cls, index, columns, sam):
+        return cls(sam=np.reshape(
+                                    sam, 
                                     newshape=(len(index), len(index))), 
                                     index=index, 
                                     columns=columns
