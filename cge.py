@@ -5,7 +5,9 @@
 from parameter import Parameter
 from calibration import Calibration
 from simulation import Simulation
+from title import title, heading
 
+debug = False
 
 table = [
             ['BRD', 'MLK'],
@@ -17,6 +19,9 @@ table = [
             ['.....']
         ]
 
+title('CGE')
+heading('unbalanced sam')
+pprint(table)     
 
 
 parameter = Parameter(
@@ -35,6 +40,7 @@ parameter.sam['CAP']['HH'] = 25
 parameter.sam['LAB']['HH'] = 25
 
 
+heading('parameter')
 print parameter
 
 doc = {
@@ -45,9 +51,12 @@ doc = {
     'alpha': "alpha share parameter in utility function"
     # ...
 }
+heading('doc')
 print doc
 
 calibration = Calibration(parameter)
+heading('calibration')
 print(calibration)
-simulation = Simulation(calibration, parameter, debug=True)
+simulation = Simulation(calibration, parameter, debug=debug)
+heading('simulation')
 print(simulation)
