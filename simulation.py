@@ -2,7 +2,7 @@ from copy import copy
 from cge_tools import empty_recarray
 import numpy as np
 from openopt import NLP
-from sam import Sam
+from table import Table
 
 
 def unlink2(value, Value):
@@ -39,19 +39,19 @@ class Simulation:
 
         def eqpz(j, J):      
             def equation(x):
-                F, Z = Sam.unflatten(index=parameter.factors, columns=parameter.industries, table=x[sF:sZ]), x[sZ:spx]
+                F, Z = Table.unflatten(index=parameter.factors, columns=parameter.industries, sam=x[sF:sZ]), x[sZ:spx]
                 return Z[j] - self.calibration.b[J] * np.prod([F[J][H] ** self.calibration.beta[J][H] for H in parameter.factors])
             return equation
 
         def eqpf(H):
             def equation(x):
-                F = Sam.unflatten(index=parameter.factors, columns=parameter.industries, table=x[sF:sZ])
+                F = Table.unflatten(index=parameter.factors, columns=parameter.industries, sam=x[sF:sZ])
                 return sum(F[J][H] for J in parameter.industries) - self.calibration.FF[H]
             return equation
 
         def eqF(h, H, j, J):      
             def equation(x):
-                F, Z, pz, pf = Sam.unflatten(index=parameter.factors, columns=parameter.industries, table=x[sF:sZ]), x[sZ:spx], x[spz:spf], x[spf:epf]
+                F, Z, pz, pf = Table.unflatten(index=parameter.factors, columns=parameter.industries, sam=x[sF:sZ]), x[sZ:spx], x[spz:spf], x[spf:epf]
                 pf = np.array([float(x[spf:epf]), 1])
                 return F[J][H] - self.calibration.beta[J][H] * pz[j] * Z[j] / pf[h]
             return equation

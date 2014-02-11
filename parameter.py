@@ -7,7 +7,10 @@ class Parameter:
         self.industries = industries
         self.factors = factors
         self.consumers = consumers
-        self.sam = Sam(sam=sam, index=index, columns=index)
+        if sam == None:
+            self.sam = Sam.empty(index=index)
+        else:
+            self.sam = Sam(sam=sam, index=index)
 
 
     def __str__(self):

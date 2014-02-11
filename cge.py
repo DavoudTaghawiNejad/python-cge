@@ -20,8 +20,7 @@ table = [
         ]
 
 title('CGE')
-heading('unbalanced sam')
-pprint(table)     
+    
 
 
 parameter = Parameter(
